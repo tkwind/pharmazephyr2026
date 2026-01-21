@@ -428,7 +428,7 @@ header, main{ position: relative; z-index: 2; }
    Hero
 ------------------------------------------ */
 .hero{
-  padding: 64px 0 20px;
+  padding: 25px 0 20px;
 }
 .hero-grid{
   display: grid;
