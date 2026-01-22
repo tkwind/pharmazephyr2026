@@ -273,4 +273,19 @@ function runWelcomeAnimation() {
   });
 })();
 
+const revealTargets = document.querySelectorAll(".card, .tl-card, .royal-card, .metric, .section-head");
+
+const io = new IntersectionObserver((entries) => {
+  for (const e of entries){
+    if (e.isIntersecting){
+      e.target.classList.add("reveal", "show");
+      io.unobserve(e.target);
+    }
+  }
+}, { threshold: 0.12 });
+
+revealTargets.forEach(el => {
+  el.classList.add("reveal");
+  io.observe(el);
+});
 
