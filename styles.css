@@ -517,12 +517,20 @@ header, main{ position: relative; z-index: 2; }
 .hero-title{
   font-family: var(--serif);
   font-weight: 800;
-  font-size: clamp(42px, 6vw, 68px);
-  letter-spacing: -0.5px;
+  font-size: clamp(44px, 6vw, 76px);
   line-height: 1.02;
+  letter-spacing: -0.6px;
   margin: 16px 0 14px;
   text-shadow: 0 12px 40px rgba(0,0,0,.5);
 }
+
+/* each line is block -> always 2 lines */
+.hero-line{
+  display: block;
+  white-space: nowrap;
+}
+
+
 .hero-title .char{
   display: inline-block;
   will-change: transform, opacity;
@@ -722,7 +730,9 @@ header, main{ position: relative; z-index: 2; }
 .card{
   position: relative;
   overflow: hidden;
-
+  display: block;
+  transform: translate3d(0,0,0);
+  will-change: transform;
   padding: 18px;
   border-radius: 24px;
 
@@ -1038,3 +1048,12 @@ header, main{ position: relative; z-index: 2; }
   transform: scaleX(1);
 }
 
+/* force hover lift */
+.card:hover{
+  transform: translate3d(0, -6px, 0) !important;
+  border-color: rgba(255,79,216,.18) !important;
+  box-shadow: 0 34px 110px rgba(0,0,0,.34) !important;
+}
+.card:active{
+  transform: translate3d(0, -4px, 0);
+}

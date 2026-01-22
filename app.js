@@ -253,7 +253,7 @@ function runWelcomeAnimation() {
   // Start animations
   // ----------------------------
   runWelcomeAnimation();
-  animateHeroTitle();
+  animateHeroTitleLines();
   animateNeonCTA();
 
   animateOnView(".card", {
@@ -288,4 +288,49 @@ revealTargets.forEach(el => {
   el.classList.add("reveal");
   io.observe(el);
 });
+
+
+function splitIntoChars(el){
+  if (!el) return;
+
+  // prevent double wrapping
+  if (el.querySelector(".char")) return;
+
+  const text = el.textContent;
+  el.textContent = "";
+
+  for (const ch of text){
+    const span = document.createElement("span");
+    span.className = "char";
+    span.textContent = ch === " " ? "\u00A0" : ch;
+    el.appendChild(span);
+  }
+}
+
+function animateHeroTitleLines(){
+  const l1 = document.querySelector(".hero-line-1");
+  const l2 = document.querySelector(".hero-line-2");
+  if (!l1 || !l2) return;
+
+  splitIntoChars(l1);
+  splitIntoChars(l2);
+
+  anime({
+    targets: ".hero-line-1 .char",
+    translateY: [18, 0],
+    opacity: [0, 1],
+    easing: "easeOutExpo",
+    duration: 900,
+    delay: anime.stagger(18),
+  });
+
+  anime({
+    targets: ".hero-line-2 .char",
+    translateY: [18, 0],
+    opacity: [0, 1],
+    easing: "easeOutExpo",
+    duration: 900,
+    delay: anime.stagger(18, { start: 220 }), // line 2 starts after line 1
+  });
+}
 
