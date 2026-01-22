@@ -151,18 +151,35 @@ header, main{ position: relative; z-index: 2; }
   position: fixed;
   inset: 0;
   z-index: 999;
-  display: grid;
-  place-items: center;
+
+  /* best mobile centering */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  /* safe mobile viewport */
+  min-height: 100svh;
+
+  /* iOS notch + address bar */
+  padding:
+    max(18px, env(safe-area-inset-top))
+    max(14px, env(safe-area-inset-right))
+    max(18px, env(safe-area-inset-bottom))
+    max(14px, env(safe-area-inset-left));
+
   background:
     radial-gradient(1100px 600px at 50% 30%, rgba(255,79,216,.12), transparent 60%),
     radial-gradient(900px 600px at 50% 70%, rgba(183,107,255,.12), transparent 60%),
     rgba(8,5,12,.86);
+
   backdrop-filter: blur(18px);
   border-bottom: 1px solid rgba(255,255,255,.06);
 }
 
+
 .welcome-inner{
   width: min(500px, 92vw);
+  max-height: calc(100svh - 40px);
   padding: 40px 26px;
   border-radius: 28px;
   border: 1px solid rgba(255,255,255,.14);
