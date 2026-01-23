@@ -1,5 +1,5 @@
 // app.js
-// Pharmazephyr 2026 - Full frontend logic (MERGED FINAL):
+// Pharmazephyr 2026 - Full frontend logic (FINAL PATCHED + STABLE):
 // ✅ Mobile nav
 // ✅ Welcome animation
 // ✅ Hero title animation (2-line forced)
@@ -14,8 +14,11 @@
 // ✅ Pass modal: BIG premium QR + copy regId + download PNG
 // ✅ localStorage persistence: refresh keeps pass visible
 // ✅ Clear pass button
-// ✅ NEW: Google Auth pipeline required before registration
-// ✅ NEW: prevent fake email mismatch (email forced from Google)
+// ✅ Google Auth pipeline required before registration
+// ✅ Email forced from Google (prevents mismatch/fake)
+// ✅ FIXED: no duplicate function declarations
+// ✅ FIXED: ID mismatch (single consistent IDs)
+
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-app.js";
 
@@ -42,6 +45,8 @@ import {
   getCountFromServer,
 } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore.js";
 
+
+
 // ----------------------------
 // Firebase init
 // ----------------------------
@@ -57,7 +62,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// NEW: Auth
+// Auth
 const auth = getAuth(app);
 const googleProvider = new GoogleAuthProvider();
 googleProvider.setCustomParameters({ prompt: "select_account" });
@@ -68,7 +73,7 @@ googleProvider.setCustomParameters({ prompt: "select_account" });
 let __lastRegistrationPayload = null;
 
 // ----------------------------
-// Helpers
+// DOM helpers
 // ----------------------------
 function qs(sel) {
   return document.querySelector(sel);
@@ -76,6 +81,20 @@ function qs(sel) {
 function qsa(sel) {
   return Array.from(document.querySelectorAll(sel));
 }
+
+// ----------------------------
+// General helpers
+// ----------------------------
+function setRegisterCTAsVisible(isVisible) {
+  // topbar register
+  const topRegister = qs("#btnTopRegister") || qs("#registerBtnTop");
+  if (topRegister) topRegister.style.display = isVisible ? "inline-flex" : "none";
+
+  // hero register
+  const heroRegister = qs("#heroRegisterBtn");
+  if (heroRegister) heroRegister.style.display = isVisible ? "inline-flex" : "none";
+}
+
 
 function normalizeEmail(email) {
   return (email || "").trim().toLowerCase();
@@ -89,8 +108,71 @@ function formatRegId(prefix, serial) {
 }
 
 // ----------------------------
+// Registration Modal (SINGLE DECLARATION - FIXED)
+// ----------------------------
+function openRegModal() {
+  const modal = qs("#regModal");
+  if (!modal) return;
+
+  modal.classList.add("show");
+  modal.setAttribute("aria-hidden", "false");
+
+  const card = modal.querySelector(".reg-modal-card");
+  if (card) {
+    anime.remove(card);
+    anime({
+      targets: card,
+      opacity: [0, 1],
+      translateY: [16, 0],
+      scale: [0.985, 1],
+      duration: 420,
+      easing: "easeOutExpo",
+    });
+  }
+
+  document.body.style.overflow = "hidden";
+}
+
+function closeRegModal() {
+  const modal = qs("#regModal");
+  if (!modal) return;
+
+  const card = modal.querySelector(".reg-modal-card");
+
+  anime.remove(card);
+  anime({
+    targets: card,
+    opacity: [1, 0],
+    translateY: [0, 12],
+    scale: [1, 0.99],
+    duration: 220,
+    easing: "easeInOutQuad",
+    complete: () => {
+      modal.classList.remove("show");
+      modal.setAttribute("aria-hidden", "true");
+      document.body.style.overflow = "";
+    },
+  });
+}
+
+function setupRegModalClose() {
+  const modal = qs("#regModal");
+  if (!modal) return;
+
+  modal.querySelectorAll("[data-reg-close]").forEach((el) => {
+    el.addEventListener("click", closeRegModal);
+  });
+
+  window.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && modal.classList.contains("show")) closeRegModal();
+  });
+}
+
+// ----------------------------
 // Local storage persistence
 // ----------------------------
+
+
 const LS_KEY = "PZ26_REGISTRATION_V1";
 
 function saveLocalRegistration(regData) {
@@ -127,7 +209,7 @@ async function hydrateRegistrationFromLocal() {
     return;
   }
 
-  // fast UX (instant show)
+  // show instantly (fast UX)
   updateTicketUI(local);
 
   // verify truth source
@@ -136,8 +218,12 @@ async function hydrateRegistrationFromLocal() {
     const snap = await getDoc(regRef);
 
     if (!snap.exists()) {
+      // 🔥 IMPORTANT: if deleted in DB -> wipe local completely
+      clearLocalRegistration();
+      __lastRegistrationPayload = null;
       updateTicketUI(null);
-      toast("info", "Pass expired", "You are not registered yet.");
+
+      toast("info", "Pass invalid", "This pass was removed or expired. Please register again.");
       return;
     }
 
@@ -145,14 +231,14 @@ async function hydrateRegistrationFromLocal() {
     updateTicketUI(fresh);
   } catch (e) {
     console.warn("Firestore verify failed:", e);
-    // keep local pass visible
+    // If offline: keep pass visible (ok)
   }
 }
 
 // ----------------------------
 // Loading overlay
 // ----------------------------
-function showLoading(title = "Processing registration…", sub = "Please wait") {
+function showLoading(title = "Processing…", sub = "Please wait") {
   const loading = qs("#loading");
   if (!loading) return;
 
@@ -276,11 +362,11 @@ function toast(type, title, msg) {
     easing: "easeOutExpo",
   });
 
-  setTimeout(kill, 4000);
+  setTimeout(kill, 1800);
 }
 
 // ----------------------------
-// Auth pipeline (NEW)
+// Auth pipeline
 // ----------------------------
 async function ensureSignedIn() {
   const user = auth.currentUser;
@@ -307,19 +393,44 @@ async function doSignOut() {
   }
 }
 
-function syncEmailFieldFromAuth() {
-  const form = qs(".form");
-  if (!form) return;
+function setTopbarAuthState(isAuthed) {
+  // ✅ SINGLE consistent IDs
+  const btnLogout = qs("#btnLogout");
+  const btnGoogle = qs("#btnGoogle");
+  const btnRegisterTop = qs("#btnTopRegister");
 
-  const emailEl = form.querySelector("input[type='email']");
-  if (!emailEl) return;
+  if (!btnLogout || !btnGoogle || !btnRegisterTop) {
+    console.warn("Topbar auth elements missing:", {
+      btnLogout,
+      btnGoogle,
+      btnRegisterTop,
+    });
+    return;
+  }
 
-  const u = auth.currentUser;
-  if (!u?.email) return;
+  if (isAuthed) {
+    btnLogout.style.display = "inline-flex";
+    btnGoogle.style.display = "none";
+    btnRegisterTop.style.display = "inline-flex";
+  } else {
+    btnLogout.style.display = "none";
+    btnGoogle.style.display = "inline-flex";
+    btnRegisterTop.style.display = "none";
+  }
+}
 
-  // force it
-  emailEl.value = u.email;
-  emailEl.setAttribute("readonly", "true");
+// Sync ALL email inputs
+function syncAllEmailInputs(email) {
+  const emailInputs = qsa("input[type='email']");
+  emailInputs.forEach((el) => {
+    if (email) {
+      el.value = email;
+      el.setAttribute("readonly", "true");
+    } else {
+      el.value = "";
+      el.removeAttribute("readonly");
+    }
+  });
 }
 
 // ----------------------------
@@ -359,7 +470,6 @@ async function hydrateParticipantsMetric() {
     const regCol = collection(db, "registrations");
     const snap = await getCountFromServer(regCol);
     const realCount = snap.data().count;
-
     animateCountTo(numEl, realCount);
   } catch (err) {
     console.error("Participants count fetch failed:", err);
@@ -401,7 +511,6 @@ function setTicketQrImage(qrDataText) {
   if (!qrBox) return;
 
   if (typeof QRCodeStyling !== "function") {
-    // fallback: at least usable
     toast("error", "QR dependency missing", "QRCodeStyling not loaded.");
     return;
   }
@@ -431,10 +540,7 @@ function setTicketQrImage(qrDataText) {
     type: "canvas",
     data: qrDataText,
     margin: 0,
-
-    qrOptions: {
-      errorCorrectionLevel: "H",
-    },
+    qrOptions: { errorCorrectionLevel: "H" },
 
     dotsOptions: {
       type: "rounded",
@@ -448,19 +554,10 @@ function setTicketQrImage(qrDataText) {
       },
     },
 
-    cornersSquareOptions: {
-      type: "extra-rounded",
-      color: "#f3e9ff",
-    },
+    cornersSquareOptions: { type: "extra-rounded", color: "#f3e9ff" },
+    cornersDotOptions: { type: "dot", color: "#ff4fd8" },
 
-    cornersDotOptions: {
-      type: "dot",
-      color: "#ff4fd8",
-    },
-
-    backgroundOptions: {
-      color: "rgba(0,0,0,0)",
-    },
+    backgroundOptions: { color: "rgba(0,0,0,0)" },
 
     image: "assets/logo.jpg",
     imageOptions: {
@@ -513,7 +610,7 @@ async function createRegistrationWithSerial(fields) {
     const emailNorm = normalizeEmail(fields.email);
     const qrText = `PZ26|${regId}|${emailNorm}`;
 
-    // keep your fields EXACT (plus auth metadata)
+    // keep your fields EXACT + auth bind
     const payload = {
       college: fields.college,
       email: emailNorm,
@@ -524,7 +621,6 @@ async function createRegistrationWithSerial(fields) {
       createdAt: serverTimestamp(),
       serial: nextSerial,
 
-      // NEW: binds registration to Google account
       uid: fields.uid,
       authProvider: "google",
     };
@@ -549,6 +645,8 @@ function updateTicketUI(regData) {
     clearLocalRegistration();
     setTicketQrEmpty("Don't Miss Out");
     ticket?.classList.remove("has-pass");
+
+    setRegisterCTAsVisible(true); 
     return;
   }
 
@@ -557,10 +655,13 @@ function updateTicketUI(regData) {
 
   setTicketQrImage(regData.qrText);
   ticket?.classList.add("has-pass");
+
+  setRegisterCTAsVisible(false);   
 }
 
+
 // ----------------------------
-// Pass modal pipeline (RETAINED)
+// Pass modal pipeline
 // ----------------------------
 function openPassModal(regData) {
   const modal = qs("#passModal");
@@ -574,7 +675,6 @@ function openPassModal(regData) {
   if (regEl) regEl.textContent = regData?.regId || "—";
   if (nameEl) nameEl.textContent = regData?.fullName || "—";
   if (collegeEl) collegeEl.textContent = regData?.college || "—";
-
   if (passQr) passQr.innerHTML = "";
 
   if (typeof QRCodeStyling !== "function") {
@@ -617,15 +717,18 @@ function openPassModal(regData) {
   modal.classList.add("show");
   modal.setAttribute("aria-hidden", "false");
 
-  anime.remove(modal.querySelector(".pass-card"));
-  anime({
-    targets: modal.querySelector(".pass-card"),
-    opacity: [0, 1],
-    translateY: [16, 0],
-    scale: [0.985, 1],
-    duration: 420,
-    easing: "easeOutExpo",
-  });
+  const card = modal.querySelector(".pass-card");
+  if (card) {
+    anime.remove(card);
+    anime({
+      targets: card,
+      opacity: [0, 1],
+      translateY: [16, 0],
+      scale: [0.985, 1],
+      duration: 420,
+      easing: "easeOutExpo",
+    });
+  }
 
   document.body.style.overflow = "hidden";
 }
@@ -673,457 +776,48 @@ function downloadPassAsPNG() {
   });
 }
 
-function setupClearPassButton() {
-  const btn = qs(".ticket-clear");
-  if (!btn) return;
 
-  btn.addEventListener("click", () => {
-    clearLocalRegistration();
-    updateTicketUI(null);
-
-    toast("info", "Pass cleared", "You can register again with a new email.");
-  });
-}
-
-function openRegModal() {
-  const modal = qs("#regModal");
+function setupPassModal() {
+  const modal = qs("#passModal");
   if (!modal) return;
 
-  modal.classList.add("show");
-  modal.setAttribute("aria-hidden", "false");
-
-  const card = modal.querySelector(".reg-modal-card");
-  anime.remove(card);
-  anime({
-    targets: card,
-    opacity: [0, 1],
-    translateY: [20, 0],
-    scale: [0.985, 1],
-    duration: 360,
-    easing: "easeOutExpo",
-  });
-
-  document.body.style.overflow = "hidden";
-}
-
-function closeRegModal() {
-  const modal = qs("#regModal");
-  if (!modal) return;
-
-  const card = modal.querySelector(".reg-modal-card");
-  anime.remove(card);
-  anime({
-    targets: card,
-    opacity: [1, 0],
-    translateY: [0, 12],
-    duration: 220,
-    easing: "easeInOutQuad",
-    complete: () => {
-      modal.classList.remove("show");
-      modal.setAttribute("aria-hidden", "true");
-      document.body.style.overflow = "";
-    },
-  });
-}
-
-
-// ----------------------------
-// Main IIFE
-// ----------------------------
-(async function () {
-
-  const googleBtnTop = qs("#googleBtnTop");
-const registerBtnTop = qs("#registerBtnTop");
-const heroRegisterBtn = qs("#heroRegisterBtn");
-
-// If NOT signed in: these trigger sign in
-googleBtnTop?.addEventListener("click", async () => {
-  try {
-    showLoading("Signing in…", "Google Authentication");
-    await ensureSignedIn();
-    hideLoading();
-  } catch (e) {
-    hideLoading();
-    toast("error", "Sign-in failed", e?.message || "Google popup blocked.");
-  }
-});
-
-heroRegisterBtn?.addEventListener("click", async () => {
-  if (!auth.currentUser) {
-    // force google
-    try {
-      showLoading("Signing in…", "Google Authentication");
-      await ensureSignedIn();
-      hideLoading();
-    } catch (e) {
-      hideLoading();
-      toast("error", "Sign-in failed", e?.message || "Google popup blocked.");
+  const ticketQr = qs(".ticket-qr");
+  ticketQr?.addEventListener("click", () => {
+    if (!__lastRegistrationPayload) {
+      toast("info", "No registration found", "Register first to generate your official pass.");
       return;
     }
-  }
-  // now signed in: open modal
-  openRegModal();
-});
+    openPassModal(__lastRegistrationPayload);
+  });
 
-registerBtnTop?.addEventListener("click", () => {
-  openRegModal();
-});
-
-
-  function setupRegModalClose() {
-  const modal = qs("#regModal");
-  if (!modal) return;
-
-  modal.querySelectorAll("[data-reg-close]").forEach((el) => {
-    el.addEventListener("click", closeRegModal);
+  modal.querySelectorAll("[data-pass-close]").forEach((el) => {
+    el.addEventListener("click", closePassModal);
   });
 
   window.addEventListener("keydown", (e) => {
-    if (e.key === "Escape" && modal.classList.contains("show")) closeRegModal();
+    if (e.key === "Escape" && modal.classList.contains("show")) closePassModal();
   });
-}
 
-function setTopbarAuthState(isSignedIn) {
-  const googleBtnTop = qs("#googleBtnTop");
-  const registerBtnTop = qs("#registerBtnTop");
+  const copyBtn = qs("#copyRegBtn");
+  copyBtn?.addEventListener("click", async () => {
+    if (!__lastRegistrationPayload?.regId) return;
 
-  if (googleBtnTop) googleBtnTop.style.display = isSignedIn ? "none" : "";
-  if (registerBtnTop) registerBtnTop.style.display = isSignedIn ? "" : "none";
-}
-
-
-
-  // ----------------------------
-  // Mobile nav
-  // ----------------------------
-  const hamburgerBtn = document.getElementById("hamburgerBtn");
-  const mobileNav = document.getElementById("mobileNav");
-
-  hamburgerBtn?.addEventListener("click", () => mobileNav.classList.toggle("show"));
-  mobileNav?.querySelectorAll("a").forEach((a) =>
-    a.addEventListener("click", () => mobileNav.classList.remove("show"))
-  );
-
-  // ----------------------------
-  // Hero title animation
-  // ----------------------------
-  function animateHeroTitleTwoLines() {
-    const line1 = document.querySelector(".hero-line-1");
-    const line2 = document.querySelector(".hero-line-2");
-    if (!line1 || !line2) return;
-    if (line1.querySelector(".char") || line2.querySelector(".char")) return;
-
-    function splitIntoChars(el) {
-      const text = el.textContent.trim();
-      el.textContent = "";
-      for (const ch of text) {
-        const span = document.createElement("span");
-        span.className = "char";
-        span.textContent = ch === " " ? "\u00A0" : ch;
-        el.appendChild(span);
-      }
+    try {
+      await navigator.clipboard.writeText(__lastRegistrationPayload.regId);
+      toast("success", "Copied", "Reg ID copied to clipboard.");
+    } catch {
+      toast("error", "Copy failed", "Your browser blocked clipboard access.");
     }
+  });
 
-    splitIntoChars(line1);
-    splitIntoChars(line2);
+  const dlBtn = qs("#downloadPassBtn");
+  dlBtn?.addEventListener("click", () => downloadPassAsPNG());
+}
 
-    anime({
-      targets: ".hero-title .char",
-      translateY: [18, 0],
-      opacity: [0, 1],
-      easing: "easeOutExpo",
-      duration: 900,
-      delay: anime.stagger(18),
-    });
-  }
-
-  // ----------------------------
-  // Animate elements on view
-  // ----------------------------
-  function animateOnView(selector, animeProps) {
-    const els = document.querySelectorAll(selector);
-    const seen = new WeakSet();
-
-    const io = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((e) => {
-          if (!e.isIntersecting) return;
-          if (seen.has(e.target)) return;
-          seen.add(e.target);
-          anime({ targets: e.target, ...animeProps });
-        });
-      },
-      { threshold: 0.25 }
-    );
-
-    els.forEach((el) => io.observe(el));
-  }
-
-  // ----------------------------
-  // Counter animation (events/days only)
-  // ----------------------------
-  const counters = document.querySelectorAll("[data-count]");
-  const counterSeen = new WeakSet();
-
-  const counterObserver = new IntersectionObserver(
-    (entries) => {
-      entries.forEach((e) => {
-        if (!e.isIntersecting) return;
-        if (counterSeen.has(e.target)) return;
-        counterSeen.add(e.target);
-
-        const metric = e.target.closest(".metric");
-        const label = metric?.querySelector(".metric-label")?.textContent?.trim()?.toLowerCase();
-        if (label === "participants") return;
-
-        const end = Number(e.target.getAttribute("data-count")) || 0;
-        animateCountTo(e.target, end);
-      });
-    },
-    { threshold: 0.55 }
-  );
-
-  counters.forEach((el) => counterObserver.observe(el));
-
-  // ----------------------------
-  // CTA Neon
-  // ----------------------------
-  function animateNeonCTA() {
-    const cta = document.querySelector(".btn-primary");
-    if (!cta) return;
-
-    anime({
-      targets: cta,
-      boxShadow: [
-        "0 18px 40px rgba(255,79,216,.18)",
-        "0 24px 65px rgba(255,79,216,.35)",
-      ],
-      duration: 1200,
-      easing: "easeInOutSine",
-      direction: "alternate",
-      loop: true,
-    });
-  }
-
-  // ----------------------------
-  // Welcome animation
-  // ----------------------------
-  function runWelcomeAnimation() {
-    const welcome = document.getElementById("welcome");
-    if (!welcome) return;
-
-    document.body.style.overflow = "hidden";
-
-    const inner = welcome.querySelector(".welcome-inner");
-    const seal = welcome.querySelector(".welcome-seal");
-    const ring = welcome.querySelector(".seal-ring");
-    const flash = welcome.querySelector(".seal-flash");
-    const lines = welcome.querySelector(".welcome-lines");
-    const college = welcome.querySelector(".welcome-college");
-    const tag = welcome.querySelector(".welcome-tag");
-    const hint = welcome.querySelector(".welcome-hint");
-
-    anime.set(inner, { opacity: 0, scale: 0.985 });
-    anime.set([seal, college, tag, hint], { opacity: 0, translateY: 10 });
-    anime.set(lines, { opacity: 0 });
-    anime.set(flash, { opacity: 0, scale: 0.9 });
-
-    const tl = anime.timeline({ easing: "easeOutExpo", autoplay: true });
-
-    tl.add({ targets: inner, opacity: [0, 1], scale: [0.985, 1], duration: 460 });
-
-    tl.add(
-      { targets: lines, opacity: [0, 0.28], duration: 480, easing: "easeInOutSine" },
-      "-=180"
-    );
-
-    tl.add(
-      {
-        targets: seal,
-        opacity: [0, 1],
-        translateY: [18, 0],
-        scale: [0.9, 1],
-        duration: 520,
-        easing: "easeOutBack",
-      },
-      "-=360"
-    );
-
-    tl.add(
-      {
-        targets: flash,
-        opacity: [0, 0.9, 0],
-        scale: [0.9, 1.18, 1.35],
-        duration: 520,
-        easing: "easeOutQuad",
-      },
-      "-=420"
-    );
-
-    tl.add(
-      { targets: ring, rotate: [0, 360], duration: 1100, easing: "easeInOutSine" },
-      "-=560"
-    );
-
-    tl.add(
-      {
-        targets: college,
-        opacity: [0, 1],
-        translateY: [10, 0],
-        duration: 520,
-        easing: "easeOutQuad",
-      },
-      "-=820"
-    );
-
-    tl.add(
-      {
-        targets: [tag, hint],
-        opacity: [0, 1],
-        translateY: [10, 0],
-        duration: 420,
-        delay: anime.stagger(120),
-      },
-      "-=520"
-    );
-
-    anime({
-      targets: ring,
-      boxShadow: [
-        "0 0 0 8px rgba(255,255,255,.02), 0 0 40px rgba(255,79,216,.12)",
-        "0 0 0 8px rgba(255,255,255,.02), 0 0 70px rgba(255,79,216,.22)",
-      ],
-      duration: 1200,
-      easing: "easeInOutSine",
-      direction: "alternate",
-      loop: true,
-    });
-
-    let dismissed = false;
-
-    const dismiss = () => {
-      if (dismissed) return;
-      dismissed = true;
-
-      welcome.removeEventListener("click", dismiss);
-      window.removeEventListener("keydown", dismiss);
-
-      anime({
-        targets: welcome,
-        opacity: [1, 0],
-        duration: 420,
-        easing: "easeInOutQuad",
-        complete: () => {
-          welcome.remove();
-          document.body.style.overflow = "";
-        },
-      });
-    };
-
-    setTimeout(dismiss, 1600);
-    welcome.addEventListener("click", dismiss);
-    window.addEventListener("keydown", dismiss);
-  }
-
-  // ----------------------------
-  // Reveal observer
-  // ----------------------------
-  function setupRevealObserver() {
-    const revealTargets = document.querySelectorAll(
-      ".card, .tl-card, .royal-card, .metric, .section-head"
-    );
-
-    const io = new IntersectionObserver(
-      (entries) => {
-        for (const e of entries) {
-          if (!e.isIntersecting) continue;
-          e.target.classList.add("reveal", "show");
-          io.unobserve(e.target);
-        }
-      },
-      { threshold: 0.12 }
-    );
-
-    revealTargets.forEach((el) => {
-      el.classList.add("reveal");
-      io.observe(el);
-    });
-  }
-
-  // ----------------------------
-  // Spotlight
-  // ----------------------------
-  function setupScrollSpotlight() {
-    const spotlight = document.querySelector(".scroll-spotlight");
-    if (!spotlight) return;
-
-    const targets = document.querySelectorAll(".spot-target");
-    if (!targets.length) return;
-
-    const io = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((e) => {
-          if (!e.isIntersecting) return;
-
-          const r = e.target.getBoundingClientRect();
-          const x = (r.left + r.width / 2) / window.innerWidth;
-          const y = (r.top + r.height / 2) / window.innerHeight;
-
-          spotlight.style.setProperty("--sx", `${Math.round(x * 100)}%`);
-          spotlight.style.setProperty("--sy", `${Math.round(y * 100)}%`);
-        });
-      },
-      { threshold: 0.6 }
-    );
-
-    targets.forEach((t) => io.observe(t));
-  }
-
-  // ----------------------------
-  // Pass modal setup (RETAINED)
-  // ----------------------------
-  function setupPassModal() {
-    const modal = qs("#passModal");
-    if (!modal) return;
-
-    const ticketQr = qs(".ticket-qr");
-    ticketQr?.addEventListener("click", () => {
-      if (!__lastRegistrationPayload) {
-        toast("info", "No registration found", "Register first to generate your official pass.");
-        return;
-      }
-      openPassModal(__lastRegistrationPayload);
-    });
-
-    modal.querySelectorAll("[data-pass-close]").forEach((el) => {
-      el.addEventListener("click", closePassModal);
-    });
-
-    window.addEventListener("keydown", (e) => {
-      if (e.key === "Escape" && modal.classList.contains("show")) closePassModal();
-    });
-
-    const copyBtn = qs("#copyRegBtn");
-    copyBtn?.addEventListener("click", async () => {
-      if (!__lastRegistrationPayload?.regId) return;
-
-      try {
-        await navigator.clipboard.writeText(__lastRegistrationPayload.regId);
-        toast("success", "Copied", "Reg ID copied to clipboard.");
-      } catch {
-        toast("error", "Copy failed", "Your browser blocked clipboard access.");
-      }
-    });
-
-    const dlBtn = qs("#downloadPassBtn");
-    dlBtn?.addEventListener("click", () => downloadPassAsPNG());
-  }
-
-  // ----------------------------
-  // Registration submit (MERGED WITH GOOGLE AUTH)
-  // ----------------------------
-  function setupRegistrationSubmit() {
-  // bottom form + modal form
+// ----------------------------
+// Registration submit (both bottom + modal)
+// ----------------------------
+function setupRegistrationSubmit() {
   const forms = qsa("form.form");
 
   forms.forEach((form) => {
@@ -1139,12 +833,11 @@ function setTopbarAuthState(isSignedIn) {
       const oldText = submitBtn.textContent;
 
       try {
-        // must be signed in
+        // auth required
         const user = await ensureSignedIn();
 
-        // force email
-        emailEl.value = user.email || "";
-        emailEl.setAttribute("readonly", "true");
+        // force email (prevent mismatch)
+        syncAllEmailInputs(user.email || "");
 
         const fullName = (fullNameEl.value || "").trim();
         const phone = cleanPhone(phoneEl.value || "");
@@ -1157,6 +850,7 @@ function setTopbarAuthState(isSignedIn) {
         }
 
         submitBtn.disabled = true;
+        
         submitBtn.textContent = "Registering...";
 
         showLoading("Processing registration…", "Creating your pass + QR");
@@ -1165,14 +859,12 @@ function setTopbarAuthState(isSignedIn) {
         if (existing) {
           updateTicketUI(existing);
           toast("info", "Already registered", `Your ID: ${existing.regId}`);
-          hideLoading();
 
+          hideLoading();
           submitBtn.textContent = oldText;
           submitBtn.disabled = false;
 
-          // close modal if it was modal form
           if (form.classList.contains("reg-form-modal")) closeRegModal();
-
           return;
         }
 
@@ -1191,10 +883,10 @@ function setTopbarAuthState(isSignedIn) {
         submitBtn.textContent = oldText;
         submitBtn.disabled = false;
 
+        // refresh participants metric instantly
         hydrateParticipantsMetric();
 
         if (form.classList.contains("reg-form-modal")) closeRegModal();
-
       } catch (err) {
         console.error(err);
         hideLoading();
@@ -1206,40 +898,411 @@ function setTopbarAuthState(isSignedIn) {
   });
 }
 
-  // ----------------------------
+// ----------------------------
+// UI + animations
+// ----------------------------
+function animateHeroTitleTwoLines() {
+  const line1 = document.querySelector(".hero-line-1");
+  const line2 = document.querySelector(".hero-line-2");
+  if (!line1 || !line2) return;
+  if (line1.querySelector(".char") || line2.querySelector(".char")) return;
+
+  function splitIntoChars(el) {
+    const text = el.textContent.trim();
+    el.textContent = "";
+    for (const ch of text) {
+      const span = document.createElement("span");
+      span.className = "char";
+      span.textContent = ch === " " ? "\u00A0" : ch;
+      el.appendChild(span);
+    }
+  }
+
+  splitIntoChars(line1);
+  splitIntoChars(line2);
+
+  anime({
+    targets: ".hero-title .char",
+    translateY: [18, 0],
+    opacity: [0, 1],
+    easing: "easeOutExpo",
+    duration: 900,
+    delay: anime.stagger(18),
+  });
+}
+
+function animateOnView(selector, animeProps) {
+  const els = document.querySelectorAll(selector);
+  const seen = new WeakSet();
+
+  const io = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((e) => {
+        if (!e.isIntersecting) return;
+        if (seen.has(e.target)) return;
+        seen.add(e.target);
+        anime({ targets: e.target, ...animeProps });
+      });
+    },
+    { threshold: 0.25 }
+  );
+
+  els.forEach((el) => io.observe(el));
+}
+
+function animateNeonCTA() {
+  const cta = document.querySelector(".btn-primary");
+  if (!cta) return;
+
+  anime({
+    targets: cta,
+    boxShadow: [
+      "0 18px 40px rgba(255,79,216,.18)",
+      "0 24px 65px rgba(255,79,216,.35)",
+    ],
+    duration: 1200,
+    easing: "easeInOutSine",
+    direction: "alternate",
+    loop: true,
+  });
+}
+
+function runWelcomeAnimation() {
+  const welcome = document.getElementById("welcome");
+  if (!welcome) return;
+
+  document.body.style.overflow = "hidden";
+
+  const inner = welcome.querySelector(".welcome-inner");
+  const seal = welcome.querySelector(".welcome-seal");
+  const ring = welcome.querySelector(".seal-ring");
+  const flash = welcome.querySelector(".seal-flash");
+  const lines = welcome.querySelector(".welcome-lines");
+  const college = welcome.querySelector(".welcome-college");
+  const tag = welcome.querySelector(".welcome-tag");
+  const hint = welcome.querySelector(".welcome-hint");
+
+  anime.set(inner, { opacity: 0, scale: 0.985 });
+  anime.set([seal, college, tag, hint], { opacity: 0, translateY: 10 });
+  anime.set(lines, { opacity: 0 });
+  anime.set(flash, { opacity: 0, scale: 0.9 });
+
+  const tl = anime.timeline({ easing: "easeOutExpo", autoplay: true });
+
+  tl.add({ targets: inner, opacity: [0, 1], scale: [0.985, 1], duration: 460 });
+
+  tl.add(
+    { targets: lines, opacity: [0, 0.28], duration: 480, easing: "easeInOutSine" },
+    "-=180"
+  );
+
+  tl.add(
+    {
+      targets: seal,
+      opacity: [0, 1],
+      translateY: [18, 0],
+      scale: [0.9, 1],
+      duration: 520,
+      easing: "easeOutBack",
+    },
+    "-=360"
+  );
+
+  tl.add(
+    {
+      targets: flash,
+      opacity: [0, 0.9, 0],
+      scale: [0.9, 1.18, 1.35],
+      duration: 520,
+      easing: "easeOutQuad",
+    },
+    "-=420"
+  );
+
+  tl.add(
+    { targets: ring, rotate: [0, 360], duration: 1100, easing: "easeInOutSine" },
+    "-=560"
+  );
+
+  tl.add(
+    {
+      targets: college,
+      opacity: [0, 1],
+      translateY: [10, 0],
+      duration: 520,
+      easing: "easeOutQuad",
+    },
+    "-=820"
+  );
+
+  tl.add(
+    {
+      targets: [tag, hint],
+      opacity: [0, 1],
+      translateY: [10, 0],
+      duration: 420,
+      delay: anime.stagger(120),
+    },
+    "-=520"
+  );
+
+  anime({
+    targets: ring,
+    boxShadow: [
+      "0 0 0 8px rgba(255,255,255,.02), 0 0 40px rgba(255,79,216,.12)",
+      "0 0 0 8px rgba(255,255,255,.02), 0 0 70px rgba(255,79,216,.22)",
+    ],
+    duration: 1200,
+    easing: "easeInOutSine",
+    direction: "alternate",
+    loop: true,
+  });
+
+  let dismissed = false;
+
+  const dismiss = () => {
+    if (dismissed) return;
+    dismissed = true;
+
+    welcome.removeEventListener("click", dismiss);
+    window.removeEventListener("keydown", dismiss);
+
+    anime({
+      targets: welcome,
+      opacity: [1, 0],
+      duration: 420,
+      easing: "easeInOutQuad",
+      complete: () => {
+        welcome.remove();
+        document.body.style.overflow = "";
+      },
+    });
+  };
+
+  setTimeout(dismiss, 1600);
+  welcome.addEventListener("click", dismiss);
+  window.addEventListener("keydown", dismiss);
+}
+
+function setupRevealObserver() {
+  const revealTargets = document.querySelectorAll(
+    ".card, .tl-card, .royal-card, .metric, .section-head"
+  );
+
+  const io = new IntersectionObserver(
+    (entries) => {
+      for (const e of entries) {
+        if (!e.isIntersecting) continue;
+        e.target.classList.add("reveal", "show");
+        io.unobserve(e.target);
+      }
+    },
+    { threshold: 0.12 }
+  );
+
+  revealTargets.forEach((el) => {
+    el.classList.add("reveal");
+    io.observe(el);
+  });
+}
+
+function setupScrollSpotlight() {
+  const spotlight = document.querySelector(".scroll-spotlight");
+  if (!spotlight) return;
+
+  const targets = document.querySelectorAll(".spot-target");
+  if (!targets.length) return;
+
+  const io = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((e) => {
+        if (!e.isIntersecting) return;
+
+        const r = e.target.getBoundingClientRect();
+        const x = (r.left + r.width / 2) / window.innerWidth;
+        const y = (r.top + r.height / 2) / window.innerHeight;
+
+        spotlight.style.setProperty("--sx", `${Math.round(x * 100)}%`);
+        spotlight.style.setProperty("--sy", `${Math.round(y * 100)}%`);
+      });
+    },
+    { threshold: 0.6 }
+  );
+
+  targets.forEach((t) => io.observe(t));
+}
+
+// ----------------------------
+// Top buttons behavior (your spec)
+// ----------------------------
+function setupTopbarButtons() {
+  const btnGoogle = qs("#btnGoogle");
+  const btnLogout = qs("#btnLogout");
+  const btnTopRegister = qs("#btnTopRegister");
+  const heroRegisterBtn = qs("#heroRegisterBtn");
+
+  btnGoogle?.addEventListener("click", async () => {
+    showLoading("Signing in…", "Google Authentication");
+    try {
+      await ensureSignedIn();
+    } catch (e) {
+      toast("error", "Sign-in failed", e?.message || "Sign-in cancelled.");
+    } finally {
+      hideLoading(); // ✅ always runs
+    }
+  });
+
+
+  btnLogout?.addEventListener("click", async () => {
+    showLoading("Signing out…", "Please wait");
+    await doSignOut();
+    hideLoading();
+  });
+
+  btnTopRegister?.addEventListener("click", () => {
+    openRegModal();
+  });
+
+  heroRegisterBtn?.addEventListener("click", async (e) => {
+    e.preventDefault();
+
+    if (!auth.currentUser) {
+      showLoading("Signing in…", "Google Authentication");
+      try {
+        await ensureSignedIn();
+      } catch (err) {
+        toast("error", "Sign-in failed", err?.message || "Sign-in cancelled.");
+        return;
+      } finally {
+        hideLoading(); // ✅ always runs
+      }
+    }
+
+    openRegModal();
+  });
+
+}
+
+// ----------------------------
+// Main IIFE
+// ----------------------------
+(async function () {
+
+  function setupScrollToTop() {
+  const btn = qs("#scrollTopBtn");
+  if (!btn) return;
+
+  const toggle = () => {
+    const y = window.scrollY || document.documentElement.scrollTop;
+    if (y > 260) btn.classList.add("show");
+    else btn.classList.remove("show");
+  };
+
+  window.addEventListener("scroll", toggle, { passive: true });
+  toggle();
+
+  btn.addEventListener("click", () => {
+    // instant top
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  });
+}
+
+setupScrollToTop();
+
+  // Mobile nav
+  const hamburgerBtn = document.getElementById("hamburgerBtn");
+  const mobileNav = document.getElementById("mobileNav");
+  hamburgerBtn?.addEventListener("click", () => mobileNav.classList.toggle("show"));
+  mobileNav?.querySelectorAll("a").forEach((a) =>
+    a.addEventListener("click", () => mobileNav.classList.remove("show"))
+  );
+
   // Startup
-  // ----------------------------
   runWelcomeAnimation();
   animateHeroTitleTwoLines();
   animateNeonCTA();
 
   setupRevealObserver();
-  setupRegModalClose();
-  setupClearPassButton();
   setupScrollSpotlight();
-  setupRegistrationSubmit();
+  setupRegModalClose();
   setupPassModal();
+  setupTopbarButtons();
+  setupRegistrationSubmit();
 
   await hydrateRegistrationFromLocal();
   hydrateParticipantsMetric();
 
-  // Auth watcher: sync form email field
-  onAuthStateChanged(auth, (user) => {
-  setTopbarAuthState(!!user);
+  // Events/days counters only
+  const counters = document.querySelectorAll("[data-count]");
+  const counterSeen = new WeakSet();
+  const counterObserver = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((e) => {
+        if (!e.isIntersecting) return;
+        if (counterSeen.has(e.target)) return;
+        counterSeen.add(e.target);
 
-  if (user?.email) {
-    // sync all email inputs
-    qsa("input[type='email']").forEach((el) => {
-      el.value = user.email;
-      el.setAttribute("readonly", "true");
-    });
-  } else {
-    qsa("input[type='email']").forEach((el) => {
-      el.value = "";
-      el.removeAttribute("readonly");
-    });
+        const metric = e.target.closest(".metric");
+        const label = metric?.querySelector(".metric-label")?.textContent?.trim()?.toLowerCase();
+        if (label === "participants") return;
+
+        const end = Number(e.target.getAttribute("data-count")) || 0;
+        animateCountTo(e.target, end);
+      });
+    },
+    { threshold: 0.55 }
+  );
+  counters.forEach((el) => counterObserver.observe(el));
+
+async function checkIfUserRegistered(user) {
+  if (!user?.email) return false;
+
+  try {
+    const existing = await getExistingRegistrationByEmail(user.email);
+    return !!existing;
+  } catch (e) {
+    console.warn("Registration check failed:", e);
+    return false;
   }
+}
+
+async function applyAuthAndRegistrationUI(user) {
+  // 1) Auth UI (google/logout/register visibility baseline)
+  setTopbarAuthState(!!user);
+  syncAllEmailInputs(user?.email || "");
+
+  // If not signed in -> register CTAs should be hidden anyway
+  if (!user) {
+    setRegisterCTAsVisible(false);
+    return;
+  }
+
+  // 2) Registration-aware UI
+  const isRegistered = await checkIfUserRegistered(user);
+
+  // If registered -> hide register CTAs
+  setRegisterCTAsVisible(!isRegistered);
+
+  // If registered -> ensure pass is hydrated (fast UX)
+  if (isRegistered) {
+    // If we already have local pass loaded, don't force UI flicker.
+    // But if ticket empty, pull from firestore quickly.
+    if (!__lastRegistrationPayload?.regId) {
+      try {
+        const reg = await getExistingRegistrationByEmail(user.email);
+        if (reg) updateTicketUI(reg);
+      } catch (e) {
+        console.warn("Auto-hydrate pass failed:", e);
+      }
+    }
+  }
+}
+
+// Auth watcher (FIXED)
+onAuthStateChanged(auth, async (user) => {
+  await applyAuthAndRegistrationUI(user);
 });
+
 
   animateOnView(".card", {
     translateY: [18, 0],
@@ -1278,7 +1341,5 @@ window.__setupCounterDoc = async function () {
   console.log("Created counters/registrations counter doc");
 };
 
-// ----------------------------
-// Optional debug / admin hooks
-// ----------------------------
+// Debug hook
 window.__pzSignOut = doSignOut;
