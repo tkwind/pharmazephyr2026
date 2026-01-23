@@ -21,6 +21,22 @@
   --sans: "Inter", system-ui, -apple-system, Segoe UI, Roboto, Arial;
 }
 
+html, body{
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+*{
+  max-width: 100%;
+}
+
+
+body{
+  position: relative;
+}
+
+
 *{ box-sizing: border-box; }
 
 header, main{ position: relative; z-index: 50; }
@@ -125,8 +141,17 @@ body::after{
 
 .container{
   width: min(1240px, 92vw);
-  margin: 0 auto;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 0;
+  padding-right: 0;
 }
+@media (max-width: 520px){
+  .container{
+    width: min(1160px, 92.5vw);
+  }
+}
+
 /* -----------------------------------------
    Transitions
 ------------------------------------------ */
@@ -250,6 +275,8 @@ header, main{ position: relative; z-index: 2; }
   position: fixed;
   inset: 0;
   z-index: 999;
+  padding: max(18px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right))
+    max(18px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
 
   /* best mobile centering */
   display: flex;
@@ -421,6 +448,8 @@ header, main{ position: relative; z-index: 2; }
   align-items: center;
   justify-content: space-between;
   padding: 14px 0;
+  padding-left: 12px;
+  padding-right: 12px;
 }
 
 .brand{
@@ -452,6 +481,16 @@ header, main{ position: relative; z-index: 2; }
   font-size: 12px;
   opacity: .7;
   margin-top: 2px;
+}
+
+@media (max-width: 520px){
+  .brand-title{
+    font-size: 22px;
+    letter-spacing: .3px;
+  }
+  .brand-subtitle{
+    font-size: 11px;
+  }
 }
 
 .nav a{
@@ -1539,4 +1578,18 @@ header, main{ position: relative; z-index: 2; }
 
 .ticket-qr.has-qr .qr-grid{
   opacity: .55;
+}
+
+.bg-layer-stack,
+.bg-neon-lines,
+.bg-grid,
+.bg-ornament,
+.bg-orb{
+  width: 100vw;
+  height: 100vh;
+  left: 0;
+  right: 0;
+}
+.bg-layer-stack{
+  overflow: clip; /* better than hidden (prevents weird mobile compositing) */
 }
