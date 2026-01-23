@@ -5,13 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Pharmazephyr 2026</title>
 
-  <!-- Fonts -->
-   <link rel="icon" href="assets/favicon.ico" sizes="any">
-    <link rel="icon" type="image/png" href="assets/favicon-32x32.png" sizes="32x32">
-    <link rel="icon" type="image/png" href="assets/favicon-16x16.png" sizes="16x16">
-    <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
-    <link rel="manifest" href="assets/site.webmanifest">
+  <!-- Favicons -->
+  <link rel="icon" href="assets/favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" href="assets/favicon-32x32.png" sizes="32x32">
+  <link rel="icon" type="image/png" href="assets/favicon-16x16.png" sizes="16x16">
+  <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+  <link rel="manifest" href="assets/site.webmanifest">
 
+  <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;800&family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
@@ -20,40 +21,36 @@
 </head>
 
 <body>
-<div class="bg-neon-lines" aria-hidden="true"></div>
-<div class="bg-orb orb-1" aria-hidden="true"></div>
-<div class="bg-orb orb-2" aria-hidden="true"></div>
-<div class="bg-grid" aria-hidden="true"></div>
-<div class="bg-ornament" aria-hidden="true"></div>
-<div class="scroll-spotlight" aria-hidden="true"></div>
 
+  <!-- Background stack -->
+  <div class="bg-neon-lines" aria-hidden="true"></div>
+  <div class="bg-orb orb-1" aria-hidden="true"></div>
+  <div class="bg-orb orb-2" aria-hidden="true"></div>
+  <div class="bg-grid" aria-hidden="true"></div>
+  <div class="bg-ornament" aria-hidden="true"></div>
+  <div class="scroll-spotlight" aria-hidden="true"></div>
 
-
-
-
-
-    <!-- Welcome Overlay -->
-    <div class="welcome" id="welcome">
+  <!-- Welcome Overlay -->
+  <div class="welcome" id="welcome">
     <div class="welcome-inner">
-        <div class="welcome-seal">
+      <div class="welcome-seal">
         <div class="seal-ring"></div>
         <div class="seal-flash"></div>
         <img src="assets/logo.jpg" alt="Pharmazephyr Logo" />
-        </div>
+      </div>
 
-        <div class="welcome-text">
+      <div class="welcome-text">
         <div class="welcome-college">Oriental College of Pharmacy</div>
         <div class="welcome-tag">Presents · Pharmazephyr 2026</div>
-        </div>
+      </div>
 
-
-        <div class="welcome-hint">Click to enter</div>
+      <div class="welcome-hint">Click to enter</div>
     </div>
 
-    <!-- subtle line overlay -->
     <div class="welcome-lines"></div>
-    </div>
+  </div>
 
+  <!-- Topbar -->
   <header class="topbar">
     <div class="container topbar-inner">
       <a class="brand" href="#">
@@ -89,10 +86,11 @@
   </header>
 
   <main>
+
     <!-- HERO -->
-    <section class="hero">
-      
+    <section class="hero" id="hero">
       <div class="container hero-grid">
+
         <div class="hero-left">
           <div class="badge">
             <span class="dot"></span>
@@ -101,17 +99,14 @@
 
           <h1 class="hero-title spot-target" id="heroTitle">
             <span class="hero-line hero-line-1">Pharmazephyr</span>
-            <span class="hero-line hero-line-2 ">2026</span>
+            <span class="hero-line hero-line-2"><span class="accent">2026</span></span>
           </h1>
-
-
 
           <div class="status-strip">
             <span class="pill">Feb 2026</span>
             <span class="pill">OCP Campus</span>
             <span class="pill">Royal Cyber</span>
           </div>
-
 
           <p class="hero-subtext">
             The flagship fest of Oriental College of Pharmacy — where
@@ -141,15 +136,15 @@
         </div>
 
         <div class="hero-right">
-          
-          <div class="royal-card card">
-            
+          <!-- ⚠️ Do NOT add class="card" here, it causes hover animation + transforms that can trigger overflow -->
+          <div class="royal-card">
             <div class="royal-ring"></div>
 
             <div class="crest">
               <div class="crest-frame">
                 <img src="assets/logo.jpg" alt="Pharmazephyr Crest" />
               </div>
+
               <div class="crest-text">
                 <div class="crest-top">Oriental College of Pharmacy</div>
                 <div class="crest-main">Project: PZ’26</div>
@@ -158,63 +153,59 @@
             </div>
 
             <div class="info-strip">
-  <div class="info">
-    <div class="info-k">Venue</div>
-    <div class="info-v">OCP Campus</div>
-  </div>
-  <div class="info">
-    <div class="info-k">Date</div>
-    <div class="info-v">Feb 2026</div>
-  </div>
-  <div class="info">
-    <div class="info-k">Theme</div>
-    <div class="info-v">Royal Cyber</div>
-  </div>
-</div>
+              <div class="info">
+                <div class="info-k">Venue</div>
+                <div class="info-v">OCP Campus</div>
+              </div>
+              <div class="info">
+                <div class="info-k">Date</div>
+                <div class="info-v">Feb 2026</div>
+              </div>
+              <div class="info">
+                <div class="info-k">Theme</div>
+                <div class="info-v">Royal Cyber</div>
+              </div>
+            </div>
 
-<!-- Ticket Card -->
-<div class="ticket">
-  <div class="ticket-top">
-    <div class="ticket-brand">
-      <span class="ticket-chip">OFFICIAL PASS</span>
-      <div class="ticket-name">Pharmazephyr 2026</div>
-      <div class="ticket-sub">Oriental College of Pharmacy</div>
-    </div>
+            <!-- Ticket Card -->
+            <div class="ticket">
+              <div class="ticket-top">
+                <div class="ticket-brand">
+                  <span class="ticket-chip">OFFICIAL PASS</span>
+                  <div class="ticket-name">Pharmazephyr 2026</div>
+                  <div class="ticket-sub">Oriental College of Pharmacy</div>
+                </div>
 
-    <div class="ticket-qr" aria-hidden="true">
-  <div class="qr-grid"></div>
-  <div class="qr-empty">Don't Miss Out</div>
-</div>
+                <div class="ticket-qr" aria-hidden="true">
+                  <div class="qr-grid"></div>
+                  <div class="qr-empty">Don't Miss Out</div>
+                </div>
+              </div>
 
-  </div>
+              <div class="ticket-divider"></div>
 
-  <div class="ticket-divider"></div>
+              <div class="ticket-bottom">
+                <div class="tcol">
+                  <div class="tk">Venue</div>
+                  <div class="tv">OCP Campus</div>
+                </div>
+                <div class="tcol">
+                  <div class="tk">Date</div>
+                  <div class="tv">Feb 2026</div>
+                </div>
+                <div class="tcol">
+                  <div class="tk">Access</div>
+                  <div class="tv">All Events</div>
+                </div>
+              </div>
 
-  <div class="ticket-bottom">
-    <div class="tcol">
-      <div class="tk">Venue</div>
-      <div class="tv">OCP Campus</div>
-    </div>
-    <div class="tcol">
-      <div class="tk">Date</div>
-      <div class="tv">Feb 2026</div>
-    </div>
-    <div class="tcol">
-      <div class="tk">Access</div>
-      <div class="tv">All Events</div>
-    </div>
-  </div>
-
-  <div class="ticket-glow" aria-hidden="true"></div>
-</div>
-
-
+              <div class="ticket-glow" aria-hidden="true"></div>
+            </div>
           </div>
         </div>
+
       </div>
     </section>
-
-    
 
     <!-- EVENTS -->
     <section class="section" id="events">
@@ -258,17 +249,15 @@
       </div>
     </section>
 
-
     <!-- TEAM -->
     <section class="section" id="team">
-  <div class="container">
-    <div class="section-head">
-      <h2 class="section-title spot-target">Team</h2>
-      <p class="section-sub">Organizers and core committee.</p>
-    </div>
-  </div>
-</section>
-
+      <div class="container">
+        <div class="section-head">
+          <h2 class="section-title spot-target">Team</h2>
+          <p class="section-sub">Organizers and core committee.</p>
+        </div>
+      </div>
+    </section>
 
     <!-- SCHEDULE -->
     <section class="section" id="schedule">
@@ -376,81 +365,74 @@
       </div>
     </section>
 
-    <!-- CONTACT -->
+    <!-- CONTACT / FOOTER -->
     <section class="section footer-section" id="contact">
-  <div class="container footer-grid">
-    <div class="footer-left">
-      <div class="footer-brand">
-        <img class="footer-logo" src="assets/logo.jpg" alt="Pharmazephyr Logo" />
-        <div>
-          <div class="footer-title">Pharmazephyr 2026</div>
-          <div class="footer-sub">Royal Cyber Aesthetic · Oriental College of Pharmacy</div>
+      <div class="container footer-grid">
+        <div class="footer-left">
+          <div class="footer-brand">
+            <img class="footer-logo" src="assets/logo.jpg" alt="Pharmazephyr Logo" />
+            <div>
+              <div class="footer-title">Pharmazephyr 2026</div>
+              <div class="footer-sub">Royal Cyber Aesthetic · Oriental College of Pharmacy</div>
+            </div>
+          </div>
+
+          <div class="footer-meta">
+            <span class="footer-pill">Feb 2026</span>
+            <span class="footer-pill">OCP Campus</span>
+            <span class="footer-pill">Project: PZ’26</span>
+          </div>
+        </div>
+
+        <div class="footer-right">
+          <div class="footer-socials">
+            <a href="#" class="social-btn" aria-label="Instagram">
+              <span class="social-ico" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                  <path d="M7.5 2h9A5.5 5.5 0 0 1 22 7.5v9A5.5 5.5 0 0 1 16.5 22h-9A5.5 5.5 0 0 1 2 16.5v-9A5.5 5.5 0 0 1 7.5 2zm0 2A3.5 3.5 0 0 0 4 7.5v9A3.5 3.5 0 0 0 7.5 20h9A3.5 3.5 0 0 0 20 16.5v-9A3.5 3.5 0 0 0 16.5 4h-9z"/>
+                  <path d="M12 7a5 5 0 1 1 0 10 5 5 0 0 1 0-10zm0 2a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/>
+                  <path d="M17.6 6.4a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/>
+                </svg>
+              </span>
+              Instagram
+            </a>
+
+            <a href="#" class="social-btn" aria-label="WhatsApp">
+              <span class="social-ico" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                  <path d="M12 2a9.5 9.5 0 0 0-8.1 14.5L3 22l5.6-1.8A9.5 9.5 0 1 0 12 2zm0 2a7.5 7.5 0 0 1 0 15c-1.3 0-2.6-.3-3.7-.9l-.3-.2-3.3 1.1 1.1-3.2-.2-.3A7.5 7.5 0 0 1 12 4z"/>
+                  <path d="M9.6 7.5c-.2-.4-.4-.4-.6-.4h-.5c-.2 0-.5.1-.7.4-.2.3-.9.9-.9 2.1s.9 2.4 1 2.6c.1.2 1.7 2.7 4.1 3.6 2 .8 2.4.7 2.8.6.4-.1 1.3-.5 1.5-1.1.2-.6.2-1.1.1-1.2-.1-.1-.2-.2-.5-.3l-1.6-.8c-.2-.1-.4-.1-.6.2l-.7.9c-.2.2-.3.2-.6.1-.3-.1-1.2-.4-2.3-1.4-.8-.7-1.4-1.7-1.5-2-.1-.3 0-.4.2-.5l.4-.5c.1-.1.2-.3.3-.4.1-.1.1-.3 0-.5l-.7-1.5z"/>
+                </svg>
+              </span>
+              WhatsApp
+            </a>
+
+            <a href="#" class="social-btn" aria-label="Email">
+              <span class="social-ico" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                  <path d="M4 5h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2zm0 2v.2l8 5.2 8-5.2V7H4zm16 2.3-7.5 4.9a1 1 0 0 1-1.1 0L4 9.3V17h16V9.3z"/>
+                </svg>
+              </span>
+              Email
+            </a>
+          </div>
+
+          <div class="footer-contact">
+            <div><span class="k">Email:</span> pharmazephyr.ocp@gmail.com</div>
+            <div><span class="k">Phone:</span> +91 XXXXX XXXXX</div>
+          </div>
+
+          <div class="footer-note">
+            © 2026 Pharmazephyr · Oriental College of Pharmacy
+          </div>
         </div>
       </div>
+    </section>
 
-      <div class="footer-meta">
-        <span class="footer-pill">Feb 2026</span>
-        <span class="footer-pill">OCP Campus</span>
-        <span class="footer-pill">Project: PZ’26</span>
-      </div>
-    </div>
+  </main>
 
-    <div class="footer-right">
-  <div class="footer-socials">
-  <a href="#" class="social-btn" aria-label="Instagram">
-    <span class="social-ico" aria-hidden="true">
-      <!-- Instagram icon -->
-      <svg viewBox="0 0 24 24">
-        <path d="M7.5 2h9A5.5 5.5 0 0 1 22 7.5v9A5.5 5.5 0 0 1 16.5 22h-9A5.5 5.5 0 0 1 2 16.5v-9A5.5 5.5 0 0 1 7.5 2zm0 2A3.5 3.5 0 0 0 4 7.5v9A3.5 3.5 0 0 0 7.5 20h9A3.5 3.5 0 0 0 20 16.5v-9A3.5 3.5 0 0 0 16.5 4h-9z"/>
-        <path d="M12 7a5 5 0 1 1 0 10 5 5 0 0 1 0-10zm0 2a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/>
-        <path d="M17.6 6.4a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/>
-      </svg>
-    </span>
-    Instagram
-  </a>
-
-  <a href="#" class="social-btn" aria-label="WhatsApp">
-    <span class="social-ico" aria-hidden="true">
-      <!-- WhatsApp icon -->
-      <svg viewBox="0 0 24 24">
-        <path d="M12 2a9.5 9.5 0 0 0-8.1 14.5L3 22l5.6-1.8A9.5 9.5 0 1 0 12 2zm0 2a7.5 7.5 0 0 1 0 15c-1.3 0-2.6-.3-3.7-.9l-.3-.2-3.3 1.1 1.1-3.2-.2-.3A7.5 7.5 0 0 1 12 4z"/>
-        <path d="M9.6 7.5c-.2-.4-.4-.4-.6-.4h-.5c-.2 0-.5.1-.7.4-.2.3-.9.9-.9 2.1s.9 2.4 1 2.6c.1.2 1.7 2.7 4.1 3.6 2 .8 2.4.7 2.8.6.4-.1 1.3-.5 1.5-1.1.2-.6.2-1.1.1-1.2-.1-.1-.2-.2-.5-.3l-1.6-.8c-.2-.1-.4-.1-.6.2l-.7.9c-.2.2-.3.2-.6.1-.3-.1-1.2-.4-2.3-1.4-.8-.7-1.4-1.7-1.5-2-.1-.3 0-.4.2-.5l.4-.5c.1-.1.2-.3.3-.4.1-.1.1-.3 0-.5l-.7-1.5z"/>
-      </svg>
-    </span>
-    WhatsApp
-  </a>
-
-  <a href="#" class="social-btn" aria-label="Email">
-    <span class="social-ico" aria-hidden="true">
-      <!-- Mail icon -->
-      <svg viewBox="0 0 24 24">
-        <path d="M4 5h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2zm0 2v.2l8 5.2 8-5.2V7H4zm16 2.3-7.5 4.9a1 1 0 0 1-1.1 0L4 9.3V17h16V9.3z"/>
-      </svg>
-    </span>
-    Email
-  </a>
-</div>
-
-  <div class="footer-contact">
-    <div><span class="k">Email:</span> pharmazephyr.ocp@gmail.com</div>
-    <div><span class="k">Phone:</span> +91 XXXXX XXXXX</div>
-  </div>
-
-  <div class="footer-note">
-    © 2026 Pharmazephyr · Oriental College of Pharmacy
-  </div>
-</div>
-
-  </div>
-</section>
-
-    </main>
-
-    <!-- anime.js -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
-
-    <!-- your main js file -->
-    <script src="app.js"></script>
-    </body>
-    </html>
-
+  <!-- anime.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
