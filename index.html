@@ -19,6 +19,8 @@
 
   <link rel="stylesheet" href="styles.css" />
 </head>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+
 
 <body>
 
@@ -29,6 +31,8 @@
   <div class="bg-grid" aria-hidden="true"></div>
   <div class="bg-ornament" aria-hidden="true"></div>
   <div class="scroll-spotlight" aria-hidden="true"></div>
+
+
 
   <!-- Welcome Overlay -->
   <div class="welcome" id="welcome">
@@ -61,13 +65,25 @@
         </div>
       </a>
 
+      <div class="auth-ui" id="authUI">
+        <button class="btn btn-ghost" id="googleBtnTop" type="button">
+  Sign in with Google
+</button>
+
+        <button class="btn btn-ghost" id="btnLogout" style="display:none;">Logout</button>
+      </div>
+
+
       <nav class="nav">
         <a href="#events">Events</a>
         <a href="#schedule">Schedule</a>
         <a href="#sponsors">Sponsors</a>
         <a href="#team">Team</a>
         <a class="btn btn-ghost" href="#contact">Contact</a>
-        <a class="btn btn-primary" href="#register">Register</a>
+        <!-- shown only when signed in -->
+<button class="btn btn-primary" id="registerBtnTop" type="button" style="display:none;">
+  Register
+</button>
       </nav>
 
       <button class="hamburger" id="hamburgerBtn" aria-label="Open menu">
@@ -115,7 +131,10 @@
           </p>
 
           <div class="hero-actions">
-            <a class="btn btn-primary btn-lg" href="#register">Register Now</a>
+            <button class="btn btn-primary btn-lg" id="heroRegisterBtn" type="button">
+  Register Now
+</button>
+
             <a class="btn btn-ghost btn-lg" href="#events">Explore Events</a>
           </div>
 
@@ -198,6 +217,8 @@
                   <div class="tv">All Events</div>
                 </div>
               </div>
+              <button class="ticket-clear" type="button">Clear Pass</button>
+
 
               <div class="ticket-glow" aria-hidden="true"></div>
             </div>
@@ -431,8 +452,114 @@
 
   </main>
 
+  <!-- Toast Wrap (top-right / top-center on mobile) -->
+<div id="toastWrap" class="toast-wrap" aria-live="polite" aria-atomic="true"></div>
+
+<!-- Loading Overlay -->
+<div id="loading" class="loading" aria-hidden="true">
+  <div class="loading-card">
+    <div class="loading-ring"></div>
+    <div class="loading-title">Processing…</div>
+    <div class="loading-sub">Please wait</div>
+  </div>
+</div>
+
+<!-- Pass Modal -->
+<div class="pass" id="passModal" aria-hidden="true">
+  <div class="pass-backdrop" data-pass-close></div>
+
+  <div class="pass-card" role="dialog" aria-modal="true" aria-label="Your Pass">
+    <div class="pass-glow" aria-hidden="true"></div>
+
+    <div class="pass-top">
+      <div class="pass-chip">OFFICIAL PASS</div>
+
+      <button class="pass-close" type="button" data-pass-close aria-label="Close pass">
+        ✕
+      </button>
+    </div>
+
+    <div class="pass-title">Pharmazephyr 2026</div>
+    <div class="pass-sub">Oriental College of Pharmacy</div>
+
+    <div class="pass-qr-wrap">
+      <div class="pass-qr" id="passQr"></div>
+    </div>
+
+    <div class="pass-meta">
+      <div class="pass-row">
+        <div class="pass-k">Reg ID</div>
+        <div class="pass-v" id="passRegId">—</div>
+      </div>
+      <div class="pass-row">
+        <div class="pass-k">Name</div>
+        <div class="pass-v" id="passName">—</div>
+      </div>
+      <div class="pass-row">
+        <div class="pass-k">College</div>
+        <div class="pass-v" id="passCollege">—</div>
+      </div>
+    </div>
+
+    <div class="pass-actions">
+      <button class="btn btn-ghost pass-btn" id="copyRegBtn" type="button">Copy Reg ID</button>
+      <button class="btn btn-primary pass-btn" id="downloadPassBtn" type="button">Download Pass</button>
+    </div>
+
+    <div class="pass-note">
+      Show this QR at entry for verification.
+    </div>
+  </div>
+</div>
+
+<div class="reg-modal" id="regModal" aria-hidden="true">
+  <div class="reg-modal-backdrop" data-reg-close></div>
+
+  <div class="reg-modal-card">
+    <div class="reg-modal-head">
+      <div>
+        <div class="reg-modal-title">Registration</div>
+        <div class="reg-modal-sub">Pharmazephyr 2026 · Official Entry</div>
+      </div>
+      <button class="reg-modal-x" data-reg-close aria-label="Close">✕</button>
+    </div>
+
+    <!-- Reuse SAME form fields (copy/paste from bottom form) -->
+    <form class="form glass reg-form-modal" onsubmit="return false;">
+      <div class="row">
+        <div class="field">
+          <label>Full Name</label>
+          <input type="text" placeholder="Your name" />
+        </div>
+        <div class="field">
+          <label>Phone</label>
+          <input type="tel" placeholder="+91 XXXXX XXXXX" />
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Email</label>
+        <input type="email" placeholder="you@gmail.com" />
+      </div>
+
+      <div class="field">
+        <label>College</label>
+        <input type="text" placeholder="Your college name" />
+      </div>
+
+      <button class="btn btn-primary btn-lg full" style="margin-top: 20px;">
+        Submit Registration
+      </button>
+
+      <p class="tiny">Entry confirmed instantly with your QR pass.</p>
+    </form>
+  </div>
+</div>
+
+
   <!-- anime.js -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
-  <script src="app.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qr-code-styling@1.6.0/lib/qr-code-styling.js"></script>
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+  <script type="module" src="app.js"></script>
 </body>
 </html>
