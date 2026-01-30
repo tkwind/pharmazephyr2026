@@ -50,14 +50,7 @@ import {
 // ----------------------------
 // Firebase init
 // ----------------------------
-const firebaseConfig = {
-  apiKey: "AIzaSyDkIazb8H_Lq605tN787g4bgMjzVjCjTSc",
-  authDomain: "pharmazephyr-2026.firebaseapp.com",
-  projectId: "pharmazephyr-2026",
-  storageBucket: "pharmazephyr-2026.firebasestorage.app",
-  messagingSenderId: "405306166383",
-  appId: "1:405306166383:web:5298c70b85414913e6d19a",
-};
+
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
